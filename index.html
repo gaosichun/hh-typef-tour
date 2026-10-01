@@ -24,7 +24,7 @@
   #rooms { left:50%; transform:translateX(-50%); bottom:14px; padding:7px; display:flex; gap:6px; flex-wrap:wrap; justify-content:center; max-width: calc(100vw - 24px); }
   #rooms button { padding:8px 13px; }
   #minimap { position:fixed; right:12px; top:72px; height:300px; border-radius:10px; background:rgba(255,255,255,.35); box-shadow:0 6px 24px rgba(0,0,0,.2); cursor:crosshair; }
-  #fps { position:fixed; left:12px; bottom:14px; font-size:10px; color:rgba(255,255,255,.7); text-shadow:0 1px 2px #000; }
+  #fps { position:fixed; left:12px; bottom:14px; z-index:1; font-size:10px; color:rgba(255,255,255,.7); text-shadow:0 1px 2px #000; }
   #labels { position:fixed; inset:0; pointer-events:none; }
   .label { position:absolute; left:0; top:0; pointer-events:auto; cursor:pointer; padding:4px 10px; border-radius:999px; font-size:13px; background:rgba(43,38,34,.82); color:#fff; white-space:nowrap; box-shadow:0 2px 8px rgba(0,0,0,.3); }
   .label:hover { background:var(--gold); }
@@ -36,8 +36,19 @@
   #joy { position:fixed; left:26px; bottom:86px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,.18); border:2px solid rgba(255,255,255,.55); display:none; touch-action:none; }
   #knob { position:absolute; left:35px; top:35px; width:50px; height:50px; border-radius:50%; background:rgba(255,255,255,.85); box-shadow:0 2px 8px rgba(0,0,0,.3); }
   body.touch.walk #joy { display:block; }
-  #intro, #loading { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(20,18,16,.55); z-index:10; }
-  #loading { background:#1a1816; color:#e9dfd2; font-size:14px; }
+  #views { left:12px; top:auto; bottom:64px; padding:6px; display:flex; flex-direction:column; gap:4px; }
+  #views button { padding:6px 10px; font-size:12px; text-align:left; }
+  #qbar { display:flex; gap:2px; align-items:center; background:#fff; border-radius:10px; padding:2px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+  #qbar span { font-size:11px; color:#8a7c6e; padding:0 4px; } #qbar button { padding:6px 8px; box-shadow:none; }
+  #ptStat { position:fixed; left:50%; top:14px; transform:translateX(-50%); padding:6px 14px; font-size:12px; color:#fff; background:rgba(0,0,0,.55); border-radius:999px; display:none; pointer-events:none; }
+  body.pt #ptStat { display:block; }
+  body.clean .panel, body.clean #minimap, body.clean #fps, body.clean #crosshair, body.clean #labels { display:none !important; }
+  #loadbar { width:min(360px,70vw); height:6px; border-radius:3px; background:rgba(255,255,255,.15); overflow:hidden; margin-top:14px; }
+  #barIn { height:100%; width:0; background:#b48a5a; transition:width .3s; }
+  #credits .card { font-size:12.5px; line-height:1.65; } #credits a { color:#9a6f3f; }
+  #intro, #loading, #credits { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(20,18,16,.55); z-index:10; }
+  #loading { background:#1a1816; color:#e9dfd2; font-size:14px; flex-direction:column; }
+  #credits { z-index:11; }
   .hidden { display:none !important; }
   .card { background:#fbf8f3; border-radius:18px; padding:22px 24px; width:min(460px, calc(100vw - 32px)); box-shadow:0 20px 60px rgba(0,0,0,.35); max-height: calc(100vh - 40px); overflow:auto; }
   .card h2 { margin:0 0 4px; font-size:19px; }
@@ -75,11 +86,26 @@
   <button data-scheme="1" class="on">方案一 浅色极简</button>
   <button data-scheme="2">方案二 暖调复古</button>
   <button id="modeBtn" class="primary">漫游模式</button>
+  <button id="viewsBtn">效果图视角</button>
+  <button id="ptBtn" title="实验功能：静止时逐帧路径追踪（需独立显卡，部分设备材质可能显示异常）">光线追踪(实验)</button>
+  <div id="qbar"><span>画质</span><button data-q="high">高</button><button data-q="mid">中</button><button data-q="low">低</button></div>
+  <button id="creditBtn" title="素材来源与许可">©</button>
   <button id="helpBtn">?</button>
 </div>
 <canvas id="minimap"></canvas>
 <div id="rooms" class="panel"></div>
 <div id="fps"></div>
+<div id="views" class="panel hidden"></div>
+<div id="ptStat"></div>
+<div id="credits" class="hidden"><div class="card">
+  <h2>素材来源与许可</h2><div class="en">CREDITS & LICENSES</div>
+  <p>材质均为真实扫描 PBR 贴图（反照率 / 法线 / 粗糙度 / AO），按效果图取色校准、按实物尺寸贴图：</p>
+  <p><b>Poly Haven（CC0）</b>：laminate_floor_02 木地板、oak_veneer_01 橡木饰面、natural_walnut_veneer 胡桃木饰面、plastered_wall_04 墙面、rough_linen 亚麻、wool_boucle 羊羔绒、fabric_leather_01/02 皮革、leather_white 皮革、poly_wool_herringbone 羊毛；模型 potted_plant_02/04、ceramic_vase_01/04、standing_picture_frame_01；HDRI canary_wharf。<a href="https://polyhaven.com/license" target="_blank" rel="noopener">polyhaven.com</a></p>
+  <p><b>ambientCG（CC0）</b>：Marble014 白色大理石（台面 / 岛台 / 卫浴背景墙）、Marble016 黑色大理石（茶几）、Marble024 暖灰石材（卫浴墙地砖）。<a href="https://ambientcg.com" target="_blank" rel="noopener">ambientcg.com</a></p>
+  <p><b>开源库</b>：three.js（MIT）、postprocessing（Zlib）、n8ao（CC0/MIT）、three-gpu-pathtracer（MIT）、fflate（MIT）。家具为参数化建模，依据PDF效果图还原。</p>
+  <p style="color:#9a8d80">户型与设计方案：Hidden Hills Tower TYPE F 方案 PDF。本页面仅供方案沟通展示。</p>
+  <div class="row"><button id="creditClose" class="primary">关闭</button></div>
+</div></div>
 
 <div id="intro">
   <div class="card">
@@ -92,6 +118,8 @@
       <tr class="only-touch"><td>环顾</td><td>在屏幕其他区域拖动手指</td></tr>
       <tr><td>鸟瞰 / 漫游</td><td>右上角按钮切换<span class="only-desk">（或 <kbd>V</kbd>）</span>；鸟瞰模式可拖动旋转、滚轮/双指缩放</td></tr>
       <tr><td>方案切换</td><td>方案一 浅色极简 / 方案二 暖调复古<span class="only-desk">（<kbd>1</kbd> <kbd>2</kbd>）</span></td></tr>
+      <tr><td>效果图视角</td><td>“效果图视角”按钮：与PDF效果图同机位对照</td></tr>
+      <tr><td>光线追踪</td><td>静止不动时逐步路径追踪出照片级画面（建议台式机）</td></tr>
       <tr><td>快速到达</td><td>底部房间按钮、点击鸟瞰图中的房间标签或右侧小地图</td></tr>
     </table>
     <div class="row">
@@ -100,8 +128,8 @@
     </div>
   </div>
 </div>
-<div id="loading">正在加载三维场景…</div>
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
+<div id="loading"><div id="loadTxt">正在加载三维场景…</div><div id="loadbar"><div id="barIn"></div></div><div style="font-size:11px;color:#8d8276;margin-top:10px">首次加载约 30MB 真实材质，请稍候</div></div>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/","three/examples/jsm/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/","postprocessing":"https://esm.sh/postprocessing@6.36.4?external=three","n8ao":"https://esm.sh/n8ao@1.9.4?external=three,postprocessing","three-gpu-pathtracer":"https://esm.sh/three-gpu-pathtracer@0.0.23?external=three","fflate":"https://esm.sh/fflate@0.8.2"}}</script>
 <script type="module" src="app.mjs"></script>
 </body>
 </html>
