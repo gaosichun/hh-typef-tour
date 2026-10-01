@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="robots" content="noindex,nofollow" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<link rel="icon" href="data:," />
+<title>Hidden Hills Tower · F户型 3D漫游</title>
+<style>
+  :root { --ink:#2b2622; --gold:#b48a5a; --glass:rgba(255,252,247,0.82); }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin:0; height:100%; overflow:hidden; background:#1a1816; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Helvetica Neue", sans-serif; color:var(--ink); touch-action:none; user-select:none; -webkit-user-select:none; }
+  #app canvas { display:block; }
+  .panel { position:fixed; background:var(--glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius:14px; box-shadow:0 6px 24px rgba(0,0,0,.18); }
+  #top { top:12px; left:12px; padding:10px 14px; max-width: calc(100vw - 24px); }
+  #top h1 { margin:0; font-size:15px; font-weight:600; letter-spacing:.5px; }
+  #top .sub { font-size:11px; color:#7a6e63; margin-top:2px; }
+  #top .sub b { color:var(--gold); font-weight:600; }
+  #ctrl { top:12px; right:12px; padding:8px; display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
+  button { font: inherit; font-size:13px; border:0; border-radius:10px; padding:8px 12px; background:#fff; color:var(--ink); cursor:pointer; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+  button:hover { background:#f6efe6; }
+  button.on { background:var(--ink); color:#fff; }
+  button.primary { background:var(--gold); color:#fff; box-shadow:none; }
+  #rooms { left:50%; transform:translateX(-50%); bottom:14px; padding:7px; display:flex; gap:6px; flex-wrap:wrap; justify-content:center; max-width: calc(100vw - 24px); }
+  #rooms button { padding:8px 13px; }
+  #minimap { position:fixed; right:12px; top:72px; height:300px; border-radius:10px; background:rgba(255,255,255,.35); box-shadow:0 6px 24px rgba(0,0,0,.2); cursor:crosshair; }
+  #fps { position:fixed; left:12px; bottom:14px; font-size:10px; color:rgba(255,255,255,.7); text-shadow:0 1px 2px #000; }
+  #labels { position:fixed; inset:0; pointer-events:none; }
+  .label { position:absolute; left:0; top:0; pointer-events:auto; cursor:pointer; padding:4px 10px; border-radius:999px; font-size:13px; background:rgba(43,38,34,.82); color:#fff; white-space:nowrap; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+  .label:hover { background:var(--gold); }
+  body.walk #labels { display:none; }
+  #crosshair { position:fixed; left:50%; top:50%; width:6px; height:6px; margin:-3px; border-radius:50%; background:rgba(255,255,255,.85); box-shadow:0 0 3px rgba(0,0,0,.6); display:none; pointer-events:none; }
+  body.walk #crosshair { display:block; }
+  #hint { position:fixed; left:50%; top:62%; transform:translateX(-50%); padding:8px 14px; font-size:13px; color:#fff; background:rgba(0,0,0,.45); border-radius:999px; display:none; pointer-events:none; }
+  body.walk:not(.locked):not(.touch):not(.shot) #hint { display:block; }
+  #joy { position:fixed; left:26px; bottom:86px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,.18); border:2px solid rgba(255,255,255,.55); display:none; touch-action:none; }
+  #knob { position:absolute; left:35px; top:35px; width:50px; height:50px; border-radius:50%; background:rgba(255,255,255,.85); box-shadow:0 2px 8px rgba(0,0,0,.3); }
+  body.touch.walk #joy { display:block; }
+  #intro, #loading { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(20,18,16,.55); z-index:10; }
+  #loading { background:#1a1816; color:#e9dfd2; font-size:14px; }
+  .hidden { display:none !important; }
+  .card { background:#fbf8f3; border-radius:18px; padding:22px 24px; width:min(460px, calc(100vw - 32px)); box-shadow:0 20px 60px rgba(0,0,0,.35); max-height: calc(100vh - 40px); overflow:auto; }
+  .card h2 { margin:0 0 4px; font-size:19px; }
+  .card .en { font-size:11px; color:#9a8d80; letter-spacing:1px; margin-bottom:14px; }
+  .card table { width:100%; font-size:13px; border-collapse:collapse; margin:8px 0 14px; }
+  .card td { padding:5px 0; border-bottom:1px solid #eee5da; vertical-align:top; }
+  .card td:first-child { color:#8a7c6e; width:34%; }
+  kbd { display:inline-block; padding:1px 6px; border-radius:5px; background:#fff; box-shadow: inset 0 -1px 0 #d8cfc4, 0 0 0 1px #e2d9ce; font-size:12px; font-family:inherit; }
+  .card .row { display:flex; gap:8px; justify-content:flex-end; }
+  .only-touch { display:none; } body.touch .only-touch { display:table-row; } body.touch .only-desk { display:none; }
+  @media (max-width: 700px) {
+    #top { padding:8px 10px; } #top h1 { font-size:13px; } #top .sub { font-size:10px; }
+    #ctrl { top:auto; bottom:64px; right:8px; left:8px; justify-content:center; padding:6px; }
+    #ctrl button { padding:7px 9px; font-size:12px; }
+    #rooms { bottom:8px; padding:5px; gap:4px; flex-wrap:nowrap; overflow-x:auto; justify-content:flex-start; width:calc(100vw - 16px); }
+    #rooms button { padding:7px 10px; font-size:12px; flex:0 0 auto; }
+    #minimap { top:auto; right:8px; top:64px; height:180px; }
+    #joy { bottom:120px; left:18px; }
+    #fps { display:none; }
+  }
+</style>
+</head>
+<body class="orbit">
+<div id="app"></div>
+<div id="labels"></div>
+<div id="crosshair"></div>
+<div id="hint">点击画面锁定鼠标 · WASD 移动 · Esc 释放</div>
+<div id="joy"><div id="knob"></div></div>
+
+<div id="top" class="panel">
+  <h1>Hidden Hills Tower · F户型 3D漫游</h1>
+  <div class="sub">两房两卫 · 约120㎡（1300 sf）· 当前：<b id="schemeName">方案一</b></div>
+</div>
+<div id="ctrl" class="panel">
+  <button data-scheme="1" class="on">方案一 浅色极简</button>
+  <button data-scheme="2">方案二 暖调复古</button>
+  <button id="modeBtn" class="primary">漫游模式</button>
+  <button id="helpBtn">?</button>
+</div>
+<canvas id="minimap"></canvas>
+<div id="rooms" class="panel"></div>
+<div id="fps"></div>
+
+<div id="intro">
+  <div class="card">
+    <h2>F户型 · 室内3D漫游</h2>
+    <div class="en">TYPE F · 2B2B · INTERACTIVE WALKTHROUGH</div>
+    <table>
+      <tr class="only-desk"><td>移动</td><td><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / 方向键，按住 <kbd>Shift</kbd> 加速</td></tr>
+      <tr class="only-desk"><td>环顾</td><td>点击画面锁定鼠标后移动鼠标（<kbd>Esc</kbd> 释放）</td></tr>
+      <tr class="only-touch"><td>移动</td><td>左下角虚拟摇杆</td></tr>
+      <tr class="only-touch"><td>环顾</td><td>在屏幕其他区域拖动手指</td></tr>
+      <tr><td>鸟瞰 / 漫游</td><td>右上角按钮切换<span class="only-desk">（或 <kbd>V</kbd>）</span>；鸟瞰模式可拖动旋转、滚轮/双指缩放</td></tr>
+      <tr><td>方案切换</td><td>方案一 浅色极简 / 方案二 暖调复古<span class="only-desk">（<kbd>1</kbd> <kbd>2</kbd>）</span></td></tr>
+      <tr><td>快速到达</td><td>底部房间按钮、点击鸟瞰图中的房间标签或右侧小地图</td></tr>
+    </table>
+    <div class="row">
+      <button id="startBtn">先看鸟瞰</button>
+      <button id="startWalk" class="primary">开始漫游</button>
+    </div>
+  </div>
+</div>
+<div id="loading">正在加载三维场景…</div>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
+<script type="module" src="app.mjs"></script>
+</body>
+</html>
